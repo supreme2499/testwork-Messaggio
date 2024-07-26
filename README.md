@@ -1,6 +1,6 @@
-# REST-API-SERVER
-Это личный репозиторий в котором я учуть работать с API. Этот репозиторий не содержит никакой полезной информации
-просто в нём я учусь работать с API в своё удовольствие
+# HTTP-API-SERVER
+
+Это выполнение моего тестового задания:
 
 ***rest-api-serv***
 
@@ -9,64 +9,55 @@
 2. github.com/sirupsen/logrus - удобный и красивый логер
 3. github.com/ilyakaznacheev/cleanenv - минималистичный и простой конфигуратор
 4. go get github.com/jackc/pgx/v5 - драйвер постгрес
-___
-# Логика сервера
-Сервер может отвечать на заданные API запросы  
 
-POST /message --> create users
-- Этот запрос получает сообщение, записывает его в бд (создаёт там user) и может вернуть: 204, 4XX, hendler location: url(ссылка на созданного пользователя)
+___
+# Логика сервера  
+***Endpoints:***
+
+POST /message --> post content
+- Этот запрос получает сообщение в формате json, получаемое вместе с запросом. {"content":"какое-то сообщение"}, полученное сообщение запишется в Postgres, а далее отправится в kafka. Там оно просто поменяет статус на "обработано"
 
 GET /statistics --> get statistics 
 - Этот метод выводит статистику по обработанным сообщениям
 
 ___
 # Логирование:
-В качестве логов я использовал обёртку для логрус у чела с ютуба.
-
-Её так же можно использовать и в других, последующих проектах.
-
-
-Для её использования нужно лишь передать её в нужное нам место с помощью:
-
-`logger := logging.GetLogger()`
-
-и  использовать с помощью:
-
- `logger.Info("logs")`
-
-вместо инфо можно написать любой другой уровень логирования поддерживаемый логрус.
+В качестве логов я использовал обёртку которую я уже ранее использовал.
 
 Данная обёртка выведет лог в консоль и запишет в нужный нам файл, в данном случае в `all.log` 
 
 # Конфигурация
-Конфиг написан с помощью библеотеки cleanenv и с его помощью можно запускать сервер как через **tcp**
-соединение так и с помощью **сокета**
+Конфиг написан с помощью библеотеки cleanenv, в конфиг я передаю необходимые мне параметры для подключения к бд
 
+# Postges in docker:
 
-# Postgres
-***Таблица users***:
-- поля: 
-```SQL
+Для развёртывания БД в контейнере я использовал офицальный драйвер Postgres для docker
 
-ID           string `json:"id" bson:"_id,omitempty"` - primery key
-Email        string `json:"email" bson:"email"` - VARCHAR (100) NOT NULL
-Username     string `json:"username" bson:"username"` - VARCHAR (100) NOT NULL
-PasswordHash string `json:"-" bson:"password" - VARCHAR (100) NOT NULL
+```docker pull postgres```
 
+***создал контейнер:***
+```
+docker run --name post_container -e POSTGRES_PASSWORD=verysecret -p 5438:5432 -d postgres
+
+docker exec -ti post_container createdb -U postgres testwork
+
+docker exec -ti post_container psql -U postgres
 ```
 
-CREATE TABLE messages (
-id SERIAL PRIMARY KEY,
-content TEXT NOT NULL,
-status VARCHAR(50) NOT NULL,
-created_at TIMESTAMP NOT NULL
-);
+***таблица:***
 
-CREATE TABLE processed_messages (
-id SERIAL PRIMARY KEY,
-message_id INTEGER REFERENCES messages(id),
-processed_at TIMESTAMP NOT NULL
-);
-
-
-{"content": "test2", "status":"yraaaaa"} {"content": "test3", "status":"yraaaaa"} {"content": "test4", "status":"yraaaaa"}{"content": "test5", "status":"yraaaaa"}
+```SQL
+    CREATE TABLE messages (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP NOT NULL
+    );  
+```
+и получил вот это
+```Docker
+Databases name: testwork
+Username: postgres
+Password: verysecret
+port: 5438->5432
+```
