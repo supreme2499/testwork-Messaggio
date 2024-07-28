@@ -37,10 +37,8 @@ ___
 
 ***создал контейнер:***
 ```
-docker run --name post_container -e POSTGRES_PASSWORD=verysecret -p 5438:5432 -d postgres
-
+docker run --name post_container -e POSTGRES_PASSWORD=verysecret -p 5432:5432 -d postgres
 docker exec -ti post_container createdb -U postgres testwork
-
 docker exec -ti post_container psql -U postgres
 ```
 
@@ -51,7 +49,7 @@ docker exec -ti post_container psql -U postgres
     id SERIAL PRIMARY KEY,
     content TEXT NOT NULL,
     status VARCHAR(50) NOT NULL,
-    created_at TIMESTAMP NOT NULL
+    created TIMESTAMP NOT NULL
     );  
 ```
 и получил вот это
@@ -59,5 +57,16 @@ docker exec -ti post_container psql -U postgres
 Databases name: testwork
 Username: postgres
 Password: verysecret
-port: 5438->5432
+port: 5432->5432
+```
+
+# Dockerfile
+```
+docker build -t testwork-messaggio .
+docker rm -f myserv
+docker run --name myserv -p 8080:8080 testwork-messaggio
+
+docker-compose down -v
+docker-compose up -d
+docker-compose up --build
 ```

@@ -3,6 +3,7 @@ package message
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -34,8 +35,18 @@ func (h *handler) Register(router *httprouter.Router) {
 
 // пока что в запросах просто затычки
 func (h *handler) GetStatistics(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
+	logger := logging.GetLogger()
+	cfg := config.GetConfig()
+	logger.Info("Отправка статистики")
+	clientdb, err := postresql.NewClient(context.TODO(), 3, cfg.Storage)
+	if err != nil {
+		log.Fatal("ошибка клиента постгрес: ", err)
+	}
+	repository := database.NewRepository(clientdb)
 
-	w.Write([]byte("Статистика обработанных сообщений"))
+	stat := repository.Statistics(context.TODO())
+	logger.Info("Всего обработано сообщений: ", stat)
+	w.Write([]byte(fmt.Sprintf("Всего обработанных сообщений: %d", stat)))
 }
 
 func (h *handler) Postmessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -59,10 +70,7 @@ func (h *handler) Postmessage(w http.ResponseWriter, r *http.Request, _ httprout
 			http.Error(w, "invalid JSON", http.StatusBadRequest)
 			return
 		}
-		if content.Status == "" {
-			content.Status = "received"
-		}
-		err = repository.Message(context.TODO(), content.Content, content.Status)
+		err = repository.Message(context.TODO(), content.Content)
 		if err != nil {
 			log.Fatal("ошибка записи сообщения в бд handler:", err)
 		}

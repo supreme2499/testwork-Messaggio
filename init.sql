@@ -1,0 +1,10 @@
+
+
+-- init.sql
+CREATE TABLE IF NOT EXISTS message (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
