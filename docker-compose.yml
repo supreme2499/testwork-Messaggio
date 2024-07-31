@@ -31,8 +31,8 @@ services:
     container_name: postgres_db
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: verysecret
-      POSTGRES_DB: datacontent
+      POSTGRES_PASSWORD: vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
+      POSTGRES_DB: railway
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
@@ -45,15 +45,15 @@ services:
       dockerfile: Dockerfile.serv
     container_name: server-api
     depends_on:
-      - db
+      - postgres.railway.internal
       - kafka
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=verysecret
-      - POSTGRES_DB=datacontent
-      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
+      - POSTGRES_DB=railway
+      - POSTGRES_HOST=postgres.railway.internal
       - KAFKA_BROKER_URL=kafka:9092
-      - KAFKA_TOPIC=my_topic
+      - KAFKA_TOPIC=message
     ports:
       - "8080:8080"
   
@@ -63,15 +63,15 @@ services:
       dockerfile: Dockerfile.work
     container_name: worker-app
     depends_on:
-      - db
+      - postgres.railway.internal
       - kafka
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=verysecret
-      - POSTGRES_DB=datacontent
-      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
+      - POSTGRES_DB=railway
+      - POSTGRES_HOST=postgres.railway.internal
       - KAFKA_BROKER_URL=kafka:9092
-      - KAFKA_TOPIC=my_topic
+      - KAFKA_TOPIC=message
     ports:
       - "8081:8080"
 

@@ -6,8 +6,8 @@ listen:
   port: 8080
 
 storage:
-  host: db
+  host: postgres.railway.internal
   port: 5432
-  database: datacontent
+  database: railway
   username: postgres
-  password: verysecret
+  password: vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
