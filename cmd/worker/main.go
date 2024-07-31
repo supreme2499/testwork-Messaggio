@@ -17,13 +17,13 @@ import (
 )
 
 func main() {
-	time.Sleep(10 * time.Second)
+	time.Sleep(35 * time.Second)
 	logger := logging.GetLogger()
 	topic := "message"
 	msgCnt := 0
 	worker, err := worker.ConnectConsumer([]string{"kafka:9092"})
 	if err != nil {
-		log.Fatal("ошибка коннекта консумера", err)
+		log.Fatal("ошибка коннекта консумера ", err)
 	}
 
 	consumer, err := worker.ConsumePartition(topic, 0, sarama.OffsetOldest)
