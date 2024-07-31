@@ -16,5 +16,4 @@ WORKDIR /root/
 COPY --from=builder /app/bin/worker .
 COPY --from=builder /app/config.yml .
 
-
 CMD ["./worker"]
