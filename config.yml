@@ -6,7 +6,7 @@ listen:
   port: 8080
 
 storage:
-  host: postgres.railway.internal
+  host: db
   port: 5432
   database: railway
   username: postgres

@@ -39,24 +39,41 @@ services:
     ports:
       - "5432:5432"
 
-  app:
+  serv:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: app-container
+      dockerfile: Dockerfile.serv
+    container_name: server-api
     depends_on:
       - db
       - kafka
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
-      POSTGRES_DB: railway
-      POSTGRES_HOST: db
-      KAFKA_BROKER_URL: kafka:9092
-      KAFKA_TOPIC: message
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
+      - POSTGRES_DB=railway
+      - POSTGRES_HOST=db
+      - KAFKA_BROKER_URL=kafka:9092
+      - KAFKA_TOPIC=message
     ports:
-      - "8080:8080" # Порт для сервиса
-      - "8081:8081" # Порт для воркера
+      - "8080:8080"
+  
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.work
+    container_name: worker-app
+    depends_on:
+      - db
+      - kafka
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=vbRLMqXsmuhnbhytRLGZYVVBzBKEevZa
+      - POSTGRES_DB=railway
+      - POSTGRES_HOST=db
+      - KAFKA_BROKER_URL=kafka:9092
+      - KAFKA_TOPIC=message
+    ports:
+      - "8081:8080"
 
 volumes:
   postgres_data:
