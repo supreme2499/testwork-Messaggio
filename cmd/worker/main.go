@@ -11,11 +11,13 @@ import (
 	"testingwork-kafka/internal/worker"
 	"testingwork-kafka/pkg/clients/postresql"
 	"testingwork-kafka/pkg/logging"
+	"time"
 
 	"github.com/IBM/sarama"
 )
 
 func main() {
+	time.Sleep(10 * time.Second)
 	logger := logging.GetLogger()
 	topic := "message"
 	msgCnt := 0

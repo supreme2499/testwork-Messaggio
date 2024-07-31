@@ -2,13 +2,29 @@
 
 Это выполнение моего тестового задания:
 
+# Инструкция по использования:
+для отправки сообщений используйте curl запрос следующего вида:
+
+``` 
+curl -X POST http://localhost:8080/message \
+     -H "Content-Type: application/json" \
+     -d '{"content": "message"}'
+```
+или в тело запроса добавьте json данного формата. так же в можете отправить сразу несколько сообщений отправив сразу несколько json друг за другом `{"content": "message1"}{"content": "message2"}{"content": "message3"}`
+
+для получения статистики по обработанным сообщения 
+```
+http://localhost:8080/statistics
+```
+
 ***rest-api-serv***
 
 **Для создания этого репозитория я использовал несколько библеотек:**
-1. github.com/julienschmidt/httprouter - удобный http роутер(мультиплексор)
-2. github.com/sirupsen/logrus - удобный и красивый логер
-3. github.com/ilyakaznacheev/cleanenv - минималистичный и простой конфигуратор
+1. go get github.com/julienschmidt/httprouter - удобный http роутер(мультиплексор)
+2. go get github.com/sirupsen/logrus - удобный и красивый логер
+3. go get github.com/ilyakaznacheev/cleanenv - минималистичный и простой конфигуратор
 4. go get github.com/jackc/pgx/v5 - драйвер постгрес
+5. go get github.com/IBM/sarama для работы с kafka
 
 ___
 # Логика сервера  
@@ -29,18 +45,6 @@ ___
 # Конфигурация
 Конфиг написан с помощью библеотеки cleanenv, в конфиг я передаю необходимые мне параметры для подключения к бд
 
-# Postges in docker:
-
-Для развёртывания БД в контейнере я использовал офицальный драйвер Postgres для docker
-
-```docker pull postgres```
-
-***создал контейнер:***
-```
-docker run --name post_container -e POSTGRES_PASSWORD=verysecret -p 5432:5432 -d postgres
-docker exec -ti post_container createdb -U postgres testwork
-docker exec -ti post_container psql -U postgres
-```
 
 ***таблица:***
 
@@ -51,6 +55,13 @@ docker exec -ti post_container psql -U postgres
     status VARCHAR(50) NOT NULL,
     created TIMESTAMP NOT NULL
     );  
+
+        CREATE TABLE worker (
+    id SERIAL PRIMARY KEY,
+    content TEXT NOT NULL,
+    status VARCHAR(50) NOT NULL,
+    created TIMESTAMP NOT NULL
+    ); 
 ```
 и получил вот это
 ```Docker
@@ -58,15 +69,20 @@ Databases name: testwork
 Username: postgres
 Password: verysecret
 port: 5432->5432
+
 ```
+
+После получения сообщения оно записывается в бд(постгрес)
+затем отправляется в кафку, там оно записывается в другую таблицу(обработанных сообщений), от туда берётся кол-во обработанных сообщений
 
 # Dockerfile
+Для создания докер контейнера используйте данные команды
 ```
-docker build -t testwork-messaggio .
-docker rm -f myserv
-docker run --name myserv -p 8080:8080 testwork-messaggio
-
-docker-compose down -v
-docker-compose up -d
 docker-compose up --build
+docker-compose down -v
 ```
+
+# Баги и ошибки
+Я знаю что криво обработал ошибки, но у меня уже не было времени  это исправлять.
+
+Кое где я в функциях возвращаю ошибки, но из-за не внимательности я их вывожу в лог фатал, вместо того что бы прокинуть их выше... 
