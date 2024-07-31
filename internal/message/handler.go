@@ -10,6 +10,7 @@ import (
 
 	"testingwork-kafka/internal/config"
 	"testingwork-kafka/internal/message/database"
+	"testingwork-kafka/internal/message/kafka"
 
 	"testingwork-kafka/internal/handlers"
 	"testingwork-kafka/pkg/clients/postresql"
@@ -46,7 +47,7 @@ func (h *handler) GetStatistics(w http.ResponseWriter, r *http.Request, _ httpro
 
 	stat := repository.Statistics(context.TODO())
 	logger.Info("Всего обработано сообщений: ", stat)
-	w.Write([]byte(fmt.Sprintf("Всего обработанных сообщений: %d", stat)))
+	w.Write([]byte(fmt.Sprintf("total messages received and processed: %d", stat)))
 }
 
 func (h *handler) Postmessage(w http.ResponseWriter, r *http.Request, _ httprouter.Params) {
@@ -56,6 +57,7 @@ func (h *handler) Postmessage(w http.ResponseWriter, r *http.Request, _ httprout
 	if err != nil {
 		log.Fatal("ошибка клиента постгрес: ", err)
 	}
+	defer clientdb.Close()
 	repository := database.NewRepository(clientdb)
 
 	logger.Info("сервер начал получение сообщений")
@@ -75,7 +77,19 @@ func (h *handler) Postmessage(w http.ResponseWriter, r *http.Request, _ httprout
 			log.Fatal("ошибка записи сообщения в бд handler:", err)
 		}
 
-		logger.Infof("Успешно получено сообщение: %s", content.Content)
+		logger.Infof("Успешно получено и записано в бд сообщение: %s", content.Content)
+
+		logger.Info("передача сообщения в kafka")
+		//kafka todo
+		MessageInBytes, err := json.Marshal(content.Content)
+		if err != nil {
+			log.Fatal("ошибка маршал контента для отправки в кафку: ", err)
+		}
+		err = kafka.PushMessageToQueue("message", MessageInBytes)
+		if err != nil {
+			log.Fatal("ошибка отправки сообщения в кафку", err)
+		}
 	}
 	logger.Info("сервер закончил получать сообщения")
+	w.Write([]byte(fmt.Sprintf("all messages received successfully")))
 }

@@ -7,15 +7,14 @@ RUN go mod download
 
 COPY . .
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/api-server ./cmd/main
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/worker ./cmd/worker
 
 FROM alpine:latest
 
 WORKDIR /root/
 
-COPY --from=builder /app/bin/api-server .
+COPY --from=builder /app/bin/worker .
 COPY --from=builder /app/config.yml .
 
-EXPOSE 8080
 
-CMD ["./api-server"]
+CMD ["./worker"]

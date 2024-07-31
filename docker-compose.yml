@@ -1,6 +1,31 @@
 version: '3.8'
 
 services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+
   db:
     image: postgres:latest
     container_name: postgres_db
@@ -14,15 +39,41 @@ services:
     ports:
       - "5432:5432"
 
-  app:
+  serv:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: go_app
+      dockerfile: Dockerfile.serv
+    container_name: server-api
     depends_on:
       - db
+      - kafka
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=verysecret
+      - POSTGRES_DB=datacontent
+      - POSTGRES_HOST=db
+      - KAFKA_BROKER_URL=kafka:9092
+      - KAFKA_TOPIC=my_topic
     ports:
       - "8080:8080"
+  
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.work
+    container_name: worker-app
+    depends_on:
+      - db
+      - kafka
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=verysecret
+      - POSTGRES_DB=datacontent
+      - POSTGRES_HOST=db
+      - KAFKA_BROKER_URL=kafka:9092
+      - KAFKA_TOPIC=my_topic
+    ports:
+      - "8081:8080"
 
 volumes:
   postgres_data:
