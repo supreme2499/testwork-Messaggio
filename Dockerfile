@@ -11,10 +11,10 @@ RUN go mod download
 COPY . .
 
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/app1 ./cmd/main/main
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/app1 ./cmd/main/
 
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/app2 ./cmd/worker/main
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o bin/app2 ./cmd/worker/
 
 # Используем минимальный образ для запуска приложений
 FROM alpine:latest
